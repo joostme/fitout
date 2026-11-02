@@ -73,6 +73,8 @@ jobs:
           docker exec smoke fitout run grep -q '^sandbox_mode = "danger-full-access"' /home/fitout/.codex/config.toml
           # module tasks become commands
           for tool in qrencode t3-pair; do docker exec smoke which "${tool}"; done
+          # healthy only means the processes run; t3 first downloads its server
+          docker exec smoke fitout run curl -s -o /dev/null --retry 30 --retry-delay 2 --retry-all-errors http://127.0.0.1:3773/
           docker exec smoke t3-pair --help
           # the catalog cache in the home belongs to the user
           test "$(docker exec smoke stat -c %U /home/fitout/.cache/fitout/catalog/t3.toml)" = fitout

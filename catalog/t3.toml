@@ -2,7 +2,7 @@
 format = 1
 name = "t3"
 description = "T3 Code server for the T3 web, desktop and mobile apps; drives Claude, Codex, OpenCode and more"
-version = "1.0.0"
+version = "1.0.1"
 tags = ["remote control", "web ui"]
 requires = ["node", "git"]
 next_steps = ["Pair the T3 app or a browser: `t3-pair` (set T3_PUBLIC_URL or T3_PUBLIC_HOST first, so the link works from other devices)"]
@@ -38,7 +38,10 @@ usage = 'arg "[args]..." var=#true help="passed to t3 pair"'
 shell = "bash -c"
 run = '''
 set -euo pipefail
-out=$(t3 pair ${usage_args:-})
+if ! out=$(t3 pair ${usage_args:-}); then
+    printf '%s\n' "${out}" >&2
+    exit 1
+fi
 
 if [ -n "${T3_PUBLIC_URL:-}" ]; then
     base="${T3_PUBLIC_URL%/}"
