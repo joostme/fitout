@@ -30,15 +30,7 @@ function envVar(name: string, raw: unknown): EnvVar {
 
 /** The configurator's view of a module file. */
 export function describe(doc: Doc): Module {
-	const mise = table(doc.mise);
-	const hooks = table(table(mise.bootstrap).hooks);
 	const daemons = table(doc.daemons);
-	const root: Module['root'] = [];
-	const rootHook = text(table(hooks['post-packages']).run);
-	if (rootHook) root.push({ what: 'setup hook (post-packages)', run: rootHook });
-	for (const [name, raw] of Object.entries(daemons)) {
-		if (table(raw).user === 'root') root.push({ what: `daemon ${name}`, run: text(table(raw).run) });
-	}
 	return {
 		name: text(doc.name),
 		kind: Object.keys(daemons).length ? 'service' : 'app',
@@ -50,9 +42,7 @@ export function describe(doc: Doc): Module {
 		requires: strings(doc.requires),
 		nextSteps: strings(doc.next_steps),
 		env: Object.entries(table(doc.env)).map(([name, raw]) => envVar(name, raw)),
-		commands: Object.keys(table(mise.tasks)),
 		daemons: Object.keys(daemons),
-		root,
 		doc
 	};
 }

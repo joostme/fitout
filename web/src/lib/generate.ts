@@ -1,4 +1,4 @@
-import { stringify } from 'yaml';
+import { Document, isSeq, type Scalar } from 'yaml';
 import { describe, problems, toToml, text } from './module';
 import type { Resolution } from './resolve';
 import type { Config, EnvVar, Module } from './types';
@@ -135,8 +135,10 @@ function compose(config: Config, modules: Module[], ports: Port[], configFiles: 
 	// owner of the data on the host
 	service.environment = { PUID: config.puid, PGID: config.pgid, ...(config.tz ? { TZ: config.tz } : {}) };
 	service.volumes = volumes;
-	const published = [...new Set(ports.map((p) => p.port))];
-	if (published.length) service.ports = published.map((p) => `${p}:${p}`);
+	// port -> modules that use it, written as a comment behind the mapping
+	const published = new Map<string, string[]>();
+	for (const p of ports) published.set(p.port, [...new Set([...(published.get(p.port) ?? []), p.module])]);
+	if (published.size) service.ports = [...published.keys()].map((p) => `${p}:${p}`);
 
 	const doc: Record<string, unknown> = { services: { [config.service]: service } };
 	if (config.inline) {
@@ -157,7 +159,13 @@ function compose(config: Config, modules: Module[], ports: Port[], configFiles: 
 			: '# Start: docker compose up -d   Logs: docker compose logs -f   Settings: config/fitout.toml',
 		''
 	].join('\n');
-	return header + stringify(doc, { lineWidth: 0 });
+	const yaml = new Document(doc);
+	const seq = yaml.getIn(['services', config.service, 'ports']);
+	if (isSeq(seq)) {
+		const owners = [...published.values()];
+		seq.items.forEach((item, i) => ((item as Scalar).comment = ` ${owners[i].join(', ')}`));
+	}
+	return header + yaml.toString({ lineWidth: 0 });
 }
 
 function steps(config: Config, modules: Module[]): Step[] {

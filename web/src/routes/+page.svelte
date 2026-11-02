@@ -6,7 +6,6 @@
 	import VarField from '#lib/components/VarField.svelte';
 	import { catalog } from '#lib/catalog.js';
 	import { customModules, defaultConfig, generate, usesSshKeys } from '#lib/generate.js';
-	import miseTools from '#lib/mise-tools.json';
 	import { emptyModule, text } from '#lib/module.js';
 	import { resolve } from '#lib/resolve.js';
 	import { decodeHash, encodeConfig, encodeModule, importFiles, review, type Review } from '#lib/share.js';
@@ -236,11 +235,6 @@
 				always enabled and replace a catalog module of the same name. <em>Share link</em> gives others a link that
 				carries the module.
 			</p>
-			<datalist id="mise-tools">
-				{#each miseTools as tool (tool.name)}
-					<option value={tool.name}>{tool.description}</option>
-				{/each}
-			</datalist>
 			{#key generation}
 				{#each config.custom as _, i (i)}
 					<ModuleEditor

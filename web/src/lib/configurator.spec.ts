@@ -16,6 +16,7 @@ import {
   toToml,
 } from "./module";
 import { resolve } from "./resolve";
+import { searchTools } from "./tool-search";
 import {
   decodeHash,
   encodeConfig,
@@ -198,6 +199,8 @@ suite("generate", () => {
     expect(service.image).toBe("ghcr.io/joostme/fitout:latest");
     expect(service.volumes).toContain("./config:/etc/fitout:ro");
     expect(service.ports).toEqual(["8080:8080", "3773:3773"]);
+    expect(file("compose.yaml")).toContain("- 8080:8080 # code-server\n");
+    expect(file("compose.yaml")).toContain("- 3773:3773 # t3\n");
     expect(service.env_file).toBe(".env");
     expect(service.environment).toEqual({
       PUID: "1000",
@@ -369,5 +372,26 @@ suite("share", () => {
     expect(importFiles(settings, catalog).notes).toEqual([
       "fitout.toml enables jupyter, which is not in the catalog; load modules/jupyter.toml too.",
     ]);
+  });
+});
+
+suite("tool search", () => {
+  const tools = [
+    { name: "ant", description: "Apache Ant is a Java library" },
+    { name: "google-java-format", description: "Reformats Java source code" },
+    { name: "javacc", description: "Parser generator" },
+    { name: "java", description: "jdk java" },
+    { name: "node", description: "JavaScript runtime" },
+  ];
+  const names = (query: string) => searchTools(tools, query).map((t) => t.name);
+
+  it("puts the exact name first, then names, then descriptions", () => {
+    expect(names("java")).toEqual(["java", "javacc", "google-java-format", "ant", "node"]);
+    expect(names("script")).toEqual(["node"]);
+    expect(names("JAVA ")[0]).toBe("java");
+  });
+
+  it("finds nothing for an empty query", () => {
+    expect(names("  ")).toEqual([]);
   });
 });

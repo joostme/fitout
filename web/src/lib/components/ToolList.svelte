@@ -8,6 +8,7 @@
 
 <script lang="ts">
 	import miseTools from '#lib/mise-tools.json';
+	import ToolCombobox from './ToolCombobox.svelte';
 
 	interface Props {
 		rows: ToolRow[];
@@ -16,7 +17,6 @@
 
 	let { rows = $bindable(), onchange }: Props = $props();
 
-	// The <datalist id="mise-tools"> with these names is rendered once by the page
 	const known = new Map((miseTools as { name: string; description: string }[]).map((t) => [t.name, t.description]));
 
 	// Backends such as npm:, pipx:, cargo: or github: take any package
@@ -44,14 +44,7 @@
 			{@const info = hint(row.name)}
 			<div class="row">
 				<div class="name">
-					<input
-						bind:value={row.name}
-						list="mise-tools"
-						placeholder="e.g. java, terraform, npm:prettier"
-						aria-label="Tool"
-						autocomplete="off"
-						spellcheck="false"
-					/>
+					<ToolCombobox bind:value={row.name} onpick={onchange} />
 					{#if info.text}<small class:unknown={info.unknown} title={info.text}>{info.text}</small>{/if}
 				</div>
 				{#if typeof row.value === 'string'}

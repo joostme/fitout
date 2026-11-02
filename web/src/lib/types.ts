@@ -27,11 +27,7 @@ export interface Module {
 	requires: string[];
 	nextSteps: string[];
 	env: EnvVar[];
-	/** Tasks; each is a command in the container. */
-	commands: string[];
 	daemons: string[];
-	/** What runs as root: hooks and daemons, with their commands. */
-	root: { what: string; run: string }[];
 	doc: Doc;
 }
 
